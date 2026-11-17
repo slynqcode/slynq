@@ -1,0 +1,53 @@
+name: Render TikTok video (2016 nostalgia)
+
+on:
+  push:
+    branches: [claude/tt-video-animation-voiceover-bgp7y0]
+    paths:
+      - "tiktok/2016-nostalgia/*.py"
+      - ".github/workflows/render-2016.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libcairo2-dev pkg-config fonts-inter fonts-dejavu-core
+          pip install -U pycairo numpy piper-tts
+          mkdir -p tiktok/2016-nostalgia/piper
+          for ext in onnx onnx.json; do
+            curl -sSfL -o tiktok/2016-nostalgia/piper/ru_RU-irina-medium.$ext \
+              "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.$ext"
+          done
+
+      - name: Generate voiceover (Piper, голос Ирина — бесплатно)
+        working-directory: tiktok/2016-nostalgia
+        env:
+          TTS_ENGINE: piper
+        run: python3 tts.py --force
+
+      - name: Render video
+        working-directory: tiktok/2016-nostalgia
+        run: python3 render.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nostalgia_2016_tiktok
+          path: tiktok/2016-nostalgia/out/nostalgia_2016_tiktok.mp4
+
+      - name: Commit video back to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f tiktok/2016-nostalgia/out/nostalgia_2016_tiktok.mp4 tiktok/2016-nostalgia/audio tiktok/2016-nostalgia/timeline.json
+          git commit -m "Render 2016 nostalgia TikTok video [skip ci]" || exit 0
+          git pull --rebase
+          git push
