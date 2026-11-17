@@ -1,0 +1,52 @@
+name: Render TikTok video
+
+on:
+  push:
+    branches: [claude/tt-video-animation-voiceover-bgp7y0]
+    paths:
+      - "tiktok/black-friday/*.py"
+      - ".github/workflows/render-tiktok.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libcairo2-dev pkg-config fonts-inter fonts-dejavu-core
+          pip install pycairo numpy
+
+      - name: Generate voiceover (Fish Audio)
+        working-directory: tiktok/black-friday
+        env:
+          FISH_API_KEY: ${{ secrets.FISH_API_KEY || secrets.FISH_AUDIO_API_KEY || secrets.FISHAUDIO_API_KEY || secrets.FISH_AUDIO_KEY || secrets.FISH_KEY || secrets.FISH_AUDIO }}
+        run: |
+          if [ -z "$FISH_API_KEY" ]; then
+            echo "::error::Секрет с ключом Fish Audio не найден. Назовите секрет FISH_API_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          python3 tts.py --force
+
+      - name: Render video
+        working-directory: tiktok/black-friday
+        run: python3 render.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: black_friday_tiktok
+          path: tiktok/black-friday/out/black_friday_tiktok.mp4
+
+      - name: Commit video back to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f tiktok/black-friday/out/black_friday_tiktok.mp4 tiktok/black-friday/audio tiktok/black-friday/timeline.json
+          git commit -m "Render Black Friday TikTok video [skip ci]" || exit 0
+          git push
