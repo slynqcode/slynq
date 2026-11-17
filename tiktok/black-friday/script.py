@@ -31,3 +31,9 @@ EDGE_VOICES = {
     NARRATOR: {"voice": "ru-RU-DmitryNeural", "rate": "+10%", "pitch": "+0Hz"},
     "seller": {"voice": "ru-RU-DmitryNeural", "rate": "-12%", "pitch": "-10Hz"},
 }
+
+# Запасной бесплатный офлайн-движок Piper (нейросеть, работает без интернета)
+PIPER_VOICES = {
+    NARRATOR: {"model": "ru_RU-ruslan-medium", "length_scale": 0.88},
+    "seller": {"model": "ru_RU-denis-medium", "length_scale": 1.1},
+}

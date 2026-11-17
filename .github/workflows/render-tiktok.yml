@@ -21,12 +21,19 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg libcairo2-dev pkg-config fonts-inter fonts-dejavu-core
-          pip install pycairo numpy edge-tts
+          pip install -U pycairo numpy edge-tts piper-tts
+          mkdir -p tiktok/black-friday/piper
+          for v in ruslan denis; do
+            for ext in onnx onnx.json; do
+              curl -sSfL -o tiktok/black-friday/piper/ru_RU-$v-medium.$ext \
+                "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/$v/medium/ru_RU-$v-medium.$ext"
+            done
+          done
 
       - name: Generate voiceover
         working-directory: tiktok/black-friday
         env:
-          TTS_ENGINE: edge  # бесплатно; для Fish Audio поставить fish и добавить секрет FISH_API_KEY
+          TTS_ENGINE: free  # бесплатно (Edge TTS, иначе Piper); для Fish Audio: fish + секрет FISH_API_KEY
           FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
         run: python3 tts.py --force
 
