@@ -10,12 +10,13 @@ import sys
 import urllib.request
 from pathlib import Path
 
-from script import GAP, SEGMENTS
+from script import EDGE_VOICES, GAP, SEGMENTS
 
 HERE = Path(__file__).parent
 AUDIO = HERE / "audio"
 AUDIO.mkdir(exist_ok=True)
 KEY = os.environ.get("FISH_API_KEY", "proxy-injected")
+ENGINE = os.environ.get("TTS_ENGINE", "fish")  # fish | edge
 
 
 def tts(text: str, voice: str, out: Path) -> None:
@@ -35,6 +36,13 @@ def tts(text: str, voice: str, out: Path) -> None:
         out.write_bytes(r.read())
 
 
+def tts_edge(seg: dict, out: Path) -> None:
+    import asyncio
+    import edge_tts
+    cfg = EDGE_VOICES[seg.get("edge", seg["voice"])]
+    asyncio.run(edge_tts.Communicate(seg["text"], cfg["voice"], rate=cfg["rate"], pitch=cfg["pitch"]).save(str(out)))
+
+
 def duration(p: Path) -> float:
     return float(subprocess.check_output(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)]).strip())
@@ -48,7 +56,10 @@ def main() -> None:
         out = AUDIO / f"{seg['id']}.mp3"
         if force or not out.exists():
             print("TTS:", seg["id"])
-            tts(seg["text"], seg["voice"], out)
+            if ENGINE == "edge":
+                tts_edge(seg, out)
+            else:
+                tts(seg["text"], seg["voice"], out)
         d = duration(out)
         timeline.append({**seg, "start": round(t, 3), "dur": round(d, 3)})
         t += d + GAP

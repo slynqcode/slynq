@@ -21,18 +21,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg libcairo2-dev pkg-config fonts-inter fonts-dejavu-core
-          pip install pycairo numpy
+          pip install pycairo numpy edge-tts
 
-      - name: Generate voiceover (Fish Audio)
+      - name: Generate voiceover
         working-directory: tiktok/black-friday
         env:
-          FISH_API_KEY: ${{ secrets.FISH_API_KEY || secrets.FISH_AUDIO_API_KEY || secrets.FISHAUDIO_API_KEY || secrets.FISH_AUDIO_KEY || secrets.FISH_KEY || secrets.FISH_AUDIO }}
-        run: |
-          if [ -z "$FISH_API_KEY" ]; then
-            echo "::error::Секрет с ключом Fish Audio не найден. Назовите секрет FISH_API_KEY (Settings → Secrets and variables → Actions)."
-            exit 1
-          fi
-          python3 tts.py --force
+          TTS_ENGINE: edge  # бесплатно; для Fish Audio поставить fish и добавить секрет FISH_API_KEY
+          FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
+        run: python3 tts.py --force
 
       - name: Render video
         working-directory: tiktok/black-friday

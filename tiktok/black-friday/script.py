@@ -18,10 +18,16 @@ SEGMENTS = [
      "text": "Трюк третий. «Остался последний товар». Последний уже третий месяц подряд."},
     {"id": "cart", "voice": NARRATOR,
      "text": "Трюк четвёртый. В каталоге цена одна, а в корзине внезапно появляются доставка, сервисный сбор и подписка, которую ты не заказывал."},
-    {"id": "meme", "voice": SELLER,
+    {"id": "meme", "voice": SELLER, "edge": "seller",
      "text": "А продавец такой: зачем мне тебя обманывать?"},
     {"id": "cta", "voice": NARRATOR,
      "text": "Проверяй историю цен заранее и сохрани видео, чтобы не попасться."},
 ]
 
 GAP = 0.25  # пауза между репликами, сек
+
+# Бесплатная озвучка Microsoft Edge TTS (используется, если ENGINE=edge)
+EDGE_VOICES = {
+    NARRATOR: {"voice": "ru-RU-DmitryNeural", "rate": "+10%", "pitch": "+0Hz"},
+    "seller": {"voice": "ru-RU-DmitryNeural", "rate": "-12%", "pitch": "-10Hz"},
+}
