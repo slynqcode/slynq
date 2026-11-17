@@ -37,3 +37,9 @@ PIPER_VOICES = {
     NARRATOR: {"model": "ru_RU-ruslan-medium", "length_scale": 0.88},
     "seller": {"model": "ru_RU-denis-medium", "length_scale": 1.1},
 }
+
+# ElevenLabs (встроенные голоса, доступны на бесплатном тарифе)
+ELEVEN_VOICES = {
+    NARRATOR: {"voice_id": "TX3LPaxmHKxFdv7VdQ7I", "stability": 0.35, "style": 0.45},  # Liam — бодрый рассказчик
+    "seller": {"voice_id": "JBFqnCBsd6RMkjVDRZzb", "stability": 0.45, "style": 0.6},   # George — хитрый продавец
+}

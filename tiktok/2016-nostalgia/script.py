@@ -23,3 +23,6 @@ GAP = 0.3  # пауза между репликами, сек
 
 EDGE_VOICES = {NARRATOR: {"voice": "ru-RU-SvetlanaNeural", "rate": "+5%", "pitch": "+0Hz"}}
 PIPER_VOICES = {NARRATOR: {"model": "ru_RU-irina-medium", "length_scale": 0.92}}
+
+# ElevenLabs (встроенный голос, доступен на бесплатном тарифе)
+ELEVEN_VOICES = {NARRATOR: {"voice_id": "cgSgspJ2msm6clMCkdW9", "stability": 0.4, "style": 0.4}}  # Jessica

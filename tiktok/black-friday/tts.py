@@ -7,16 +7,17 @@ import json
 import os
 import subprocess
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
-from script import EDGE_VOICES, GAP, PIPER_VOICES, SEGMENTS
+from script import ELEVEN_VOICES, EDGE_VOICES, GAP, PIPER_VOICES, SEGMENTS
 
 HERE = Path(__file__).parent
 AUDIO = HERE / "audio"
 AUDIO.mkdir(exist_ok=True)
 KEY = os.environ.get("FISH_API_KEY", "proxy-injected")
-ENGINE = os.environ.get("TTS_ENGINE", "fish")  # fish | edge | piper | free (edge, иначе piper)
+ENGINE = os.environ.get("TTS_ENGINE", "fish")  # eleven | fish | edge | piper | free (edge, иначе piper)
 PIPER_DIR = Path(os.environ.get("PIPER_DIR", HERE / "piper"))
 
 
@@ -60,6 +61,27 @@ def tts_piper(seg: dict, out: Path) -> None:
     wav.unlink()
 
 
+def tts_eleven(seg: dict, out: Path) -> None:
+    cfg = ELEVEN_VOICES[seg.get("edge", seg["voice"])]
+    body = json.dumps({
+        "text": seg["text"],
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {"stability": cfg.get("stability", 0.4), "similarity_boost": 0.8,
+                           "style": cfg.get("style", 0.35), "use_speaker_boost": True},
+    }).encode()
+    req = urllib.request.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{cfg['voice_id']}?output_format=mp3_44100_128",
+        data=body, method="POST",
+        headers={"xi-api-key": os.environ.get("ELEVENLABS_API_KEY", "proxy-injected"),
+                 "Content-Type": "application/json", "Accept": "audio/mpeg"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            out.write_bytes(r.read())
+    except urllib.error.HTTPError as e:
+        raise SystemExit(f"ElevenLabs {e.code}: {e.read().decode(errors='replace')[:500]}")
+
+
 def duration(p: Path) -> float:
     return float(subprocess.check_output(
         ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(p)]).strip())
@@ -83,7 +105,9 @@ def main() -> None:
         out = AUDIO / f"{seg['id']}.mp3"
         if force or not out.exists():
             print("TTS:", seg["id"])
-            if ENGINE == "edge":
+            if ENGINE == "eleven":
+                tts_eleven(seg, out)
+            elif ENGINE == "edge":
                 tts_edge(seg, out)
             elif ENGINE == "piper":
                 tts_piper(seg, out)
