@@ -14,19 +14,16 @@ permissions:
 jobs:
   render:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
+        timeout-minutes: 6
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg libcairo2-dev pkg-config fonts-inter fonts-dejavu-core
-          pip install -U pycairo numpy piper-tts
-          mkdir -p tiktok/new-year-types/piper
-          for ext in onnx onnx.json; do
-            curl -sSfL -o tiktok/new-year-types/piper/ru_RU-irina-medium.$ext \
-              "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.$ext"
-          done
+          pip install -U pycairo numpy
 
       - name: Generate voiceover (ElevenLabs)
         working-directory: tiktok/new-year-types
