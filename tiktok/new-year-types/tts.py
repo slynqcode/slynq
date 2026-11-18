@@ -113,6 +113,8 @@ def main() -> None:
                 tts_piper(seg, out)
             else:
                 tts(seg["text"], seg["voice"], out)
+        if "--audio-only" in sys.argv:  # в CI без ffmpeg: только скачать озвучку
+            continue
         d = duration(out)
         timeline.append({**seg, "start": round(t, 3), "dur": round(d, 3)})
         t += d + GAP

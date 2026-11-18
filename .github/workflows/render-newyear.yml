@@ -1,10 +1,13 @@
-name: Render TikTok video (new year types)
+name: Voiceover for TikTok video (new year types)
+
+# Только озвучка через ElevenLabs (без установки пакетов — быстро).
+# Видео рендерится локально: python3 tts.py && python3 render.py
 
 on:
   push:
     branches: [claude/tt-video-animation-voiceover-bgp7y0]
     paths:
-      - "tiktok/new-year-types/*.py"
+      - "tiktok/new-year-types/script.py"
       - ".github/workflows/render-newyear.yml"
   workflow_dispatch:
 
@@ -12,40 +15,24 @@ permissions:
   contents: write
 
 jobs:
-  render:
+  voice:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        timeout-minutes: 6
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg libcairo2-dev pkg-config fonts-inter fonts-dejavu-core
-          pip install -U pycairo numpy
 
       - name: Generate voiceover (ElevenLabs)
         working-directory: tiktok/new-year-types
         env:
           TTS_ENGINE: eleven
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-        run: python3 tts.py --force
+        run: python3 tts.py --force --audio-only
 
-      - name: Render video
-        working-directory: tiktok/new-year-types
-        run: python3 render.py
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: new_year_types_tiktok
-          path: tiktok/new-year-types/out/new_year_types_tiktok.mp4
-
-      - name: Commit video back to branch
+      - name: Commit voiceover to branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f tiktok/new-year-types/out/new_year_types_tiktok.mp4 tiktok/new-year-types/audio tiktok/new-year-types/timeline.json
-          git commit -m "Render new year types TikTok video [skip ci]" || exit 0
+          git add -f tiktok/new-year-types/audio
+          git commit -m "Voiceover for New Year types TikTok video [skip ci]" || exit 0
           git pull --rebase
           git push
