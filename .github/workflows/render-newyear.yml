@@ -1,0 +1,54 @@
+name: Render TikTok video (new year types)
+
+on:
+  push:
+    branches: [claude/tt-video-animation-voiceover-bgp7y0]
+    paths:
+      - "tiktok/new-year-types/*.py"
+      - ".github/workflows/render-newyear.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libcairo2-dev pkg-config fonts-inter fonts-dejavu-core
+          pip install -U pycairo numpy piper-tts
+          mkdir -p tiktok/new-year-types/piper
+          for ext in onnx onnx.json; do
+            curl -sSfL -o tiktok/new-year-types/piper/ru_RU-irina-medium.$ext \
+              "https://huggingface.co/rhasspy/piper-voices/resolve/main/ru/ru_RU/irina/medium/ru_RU-irina-medium.$ext"
+          done
+
+      - name: Generate voiceover (ElevenLabs)
+        working-directory: tiktok/new-year-types
+        env:
+          TTS_ENGINE: eleven
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: python3 tts.py --force
+
+      - name: Render video
+        working-directory: tiktok/new-year-types
+        run: python3 render.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: new_year_types_tiktok
+          path: tiktok/new-year-types/out/new_year_types_tiktok.mp4
+
+      - name: Commit video back to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f tiktok/new-year-types/out/new_year_types_tiktok.mp4 tiktok/new-year-types/audio tiktok/new-year-types/timeline.json
+          git commit -m "Render new year types TikTok video [skip ci]" || exit 0
+          git pull --rebase
+          git push
