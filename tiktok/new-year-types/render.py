@@ -309,6 +309,8 @@ def gift(c, x, y, s, col, rib=GOLD):
 
 
 def calendar(c, x, y, s, top, big, rot=0.0, col=RED):
+    if s <= 1e-3:
+        return
     c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s)
     fill_rrect(c, -140, -130, 280, 260, 28, WHITE, stroke=INK)
     fill_rrect(c, -140, -130, 280, 76, 28, col)
@@ -368,6 +370,8 @@ def scene_planner(c, t, lt, D):
 
 
 def xmas_tree(c, x, y, s, t):
+    if s <= 1e-3:
+        return
     c.save(); c.translate(x, y); c.scale(s, s)
     fill_rrect(c, -35, 250, 70, 70, 8, (0.5, 0.3, 0.15), stroke=INK, lw=6)
     for i, (w, yy) in enumerate(((300, 260), (240, 130), (170, 10))):
